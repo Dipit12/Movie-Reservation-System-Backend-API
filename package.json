@@ -10,6 +10,8 @@
     "typescript": "^5"
   },
   "dependencies": {
+    "@prisma/adapter-libsql": "^7.1.0",
+    "@prisma/client": "^7.1.0",
     "@types/express": "^5.0.6",
     "dotenv": "^17.2.3",
     "express": "^5.2.1"

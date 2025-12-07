@@ -1,0 +1,154 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+  generator client {
+    provider = "prisma-client"
+    output = "./generated"
+    engineType = "client"
+    runtime = "bun"
+  }
+
+datasource db {
+  provider = "sqlite"
+}
+
+// ---------- MODELS ----------
+
+model User {
+  user_id       String    @id @default(uuid())
+  name          String
+  email         String    @unique
+  password_hash String
+  mobile_num    String
+  role          Role 
+  created_at    DateTime  @default(now())
+
+  // Relations
+  theatres      Theatre[]    // if role = ADMIN, they manage these
+  bookings      Booking[]
+}
+
+model Theatre {
+  theatre_id String   @id @default(uuid())
+  name       String
+  city       String
+  address    String
+
+  admin_id   String?       // FK to User.user_id
+  admin      User?  @relation(fields: [admin_id], references: [user_id])
+
+  screens    Screen[]
+}
+
+model Screen {
+  screen_id   String   @id @default(uuid())
+  theatre_id  String
+  name        String
+  screen_type String
+  capacity    Int
+
+  theatre   Theatre  @relation(fields: [theatre_id], references: [theatre_id])
+  seats     Seat[]
+  showtimes Showtime[]
+}
+
+model Seat {
+  seat_id     String   @id @default(uuid())
+  screen_id   String
+  row_label   String
+  seat_number Int
+  seat_type   SeatType
+
+  screen        Screen        @relation(fields: [screen_id], references: [screen_id])
+  bookingSeats  BookingSeat[]
+
+  @@unique([screen_id, row_label, seat_number])
+}
+
+model Movie {
+  movie_id     String   @id @default(uuid())
+  title        String
+  description  String
+  duration_min Int
+  genres       Genre
+  actors       String
+  release_date DateTime
+  end_date     DateTime
+
+  showtimes    Showtime[]
+}
+
+model Showtime {
+  showtime_id String   @id @default(uuid())
+  movie_id    String
+  screen_id   String
+  start_time  DateTime
+  end_time    DateTime
+  base_price  Int
+  status      ShowtimeStatus
+
+  movie    Movie   @relation(fields: [movie_id], references: [movie_id])
+  screen   Screen  @relation(fields: [screen_id], references: [screen_id])
+  bookings Booking[]
+}
+
+model Booking {
+  booking_id   String        @id @default(uuid())
+  user_id      String
+  showtime_id  String
+  status       BookingStatus
+  total_amount Int
+  created_at   DateTime      @default(now())
+
+  user      User     @relation(fields: [user_id], references: [user_id])
+  showtime  Showtime @relation(fields: [showtime_id], references: [showtime_id])
+  seats     BookingSeat[]
+}
+
+model BookingSeat {
+  booking_seat_id String @id @default(uuid())
+  booking_id      String
+  seat_id         String
+  price           Int
+
+  booking Booking @relation(fields: [booking_id], references: [booking_id])
+  seat    Seat    @relation(fields: [seat_id], references: [seat_id])
+
+  @@unique([booking_id, seat_id])
+}
+
+// ---------- ENUMS ----------
+
+enum Role {
+  CUSTOMER
+  ADMIN
+}
+
+enum SeatType {
+  REGULAR
+  PREMIUM
+  VIP
+}
+
+enum Genre {
+  Action
+  Comedy
+  Romantic
+  Horror
+  Thriller
+  Children
+  Other
+}
+
+enum ShowtimeStatus {
+  ACTIVE
+  CANCELLED
+  FINISHED
+}
+
+enum BookingStatus {
+  PENDING_PAYMENT
+  CONFIRMED
+  CANCELLED
+  EXPIRED
+}
