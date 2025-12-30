@@ -1,7 +1,11 @@
 import {Router} from 'express'
-// import authMiddleware here
+import { authenticateToken } from '../../middleware/authMiddleware'
+import { customerLogin, customerRegister,aboutMe } from '../../controller/customer/auth'
 const router = Router()
 
-// router.post("/api/v1/auth/register")
-// router.post("/api/v1/auth/login")
-// router.get("/api/v1/auth/me")
+// Customer registration - public endpoint, no authentication required
+router.post("/api/v1/auth/register", customerRegister)
+// Customer login - public endpoint, no authentication required
+router.post("/api/v1/auth/login", customerLogin)
+// Get current customer info - requires authentication
+router.get("/api/v1/auth/me", authenticateToken, aboutMe)
